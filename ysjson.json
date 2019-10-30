@@ -1,0 +1,1348 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "identifier": {
+            "type": "string"
+        },
+        "location": {
+            "type": "string",
+            "defaultValue": "Korea Central"
+        },
+        "adminUsername": {
+            "type": "string"
+        },
+        "adminPassword": {
+            "type": "securestring"
+        }
+    },
+    "variables": {
+        "subscriptionID": "[subscription().subscriptionID]",
+        "resourceGroupName": "[concat(parameters('identifier'), '-RG')]",
+        "resourceIdPrefix": "[concat('/subscriptions/', variables('subscriptionID'), '/resourceGroups/', variables('resourceGroupName'), '/providers/')]",
+        "collection": {
+            "wadlogsForWindows": "<WadCfg> <DiagnosticMonitorConfiguration overallQuotaInMB=\"4096\" xmlns=\"http://schemas.microsoft.com/ServiceHosting/2010/10/DiagnosticsConfiguration\"> <DiagnosticInfrastructureLogs scheduledTransferLogLevelFilter=\"Error\"/> <WindowsEventLog scheduledTransferPeriod=\"PT1M\" > <DataSource name=\"Application!*[System[(Level = 1 or Level = 2)]]\" /> <DataSource name=\"Security!*[System[(Level = 1 or Level = 2)]]\" /> <DataSource name=\"System!*[System[(Level = 1 or Level = 2)]]\" /></WindowsEventLog>",
+            "wadperfcounters1": "<PerformanceCounters scheduledTransferPeriod=\"PT1M\"><PerformanceCounterConfiguration counterSpecifier=\"\\Processor(_Total)\\% Processor Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU utilization\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor(_Total)\\% Privileged Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU privileged time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor(_Total)\\% User Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"CPU user time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Processor Information(_Total)\\Processor Frequency\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"CPU frequency\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\System\\Processes\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Processes\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Process(_Total)\\Thread Count\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Threads\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Process(_Total)\\Handle Count\" sampleRate=\"PT15S\" unit=\"Count\"><annotation displayName=\"Handles\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\% Committed Bytes In Use\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Memory usage\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\Available Bytes\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory available\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\Committed Bytes\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory committed\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\Memory\\Commit Limit\" sampleRate=\"PT15S\" unit=\"Bytes\"><annotation displayName=\"Memory commit limit\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\% Disk Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Disk active time\" locale=\"en-us\"/></PerformanceCounterConfiguration>",
+            "wadperfcounters2": "<PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\% Disk Read Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Disk active read time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\% Disk Write Time\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Disk active write time\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Transfers/sec\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk operations\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Reads/sec\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk read operations\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Writes/sec\" sampleRate=\"PT15S\" unit=\"CountPerSecond\"><annotation displayName=\"Disk write operations\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Bytes/sec\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk speed\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Read Bytes/sec\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk read speed\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\PhysicalDisk(_Total)\\Disk Write Bytes/sec\" sampleRate=\"PT15S\" unit=\"BytesPerSecond\"><annotation displayName=\"Disk write speed\" locale=\"en-us\"/></PerformanceCounterConfiguration><PerformanceCounterConfiguration counterSpecifier=\"\\LogicalDisk(_Total)\\% Free Space\" sampleRate=\"PT15S\" unit=\"Percent\"><annotation displayName=\"Disk free space (percentage)\" locale=\"en-us\"/></PerformanceCounterConfiguration></PerformanceCounters>"
+        },
+        "diagnoticsInfo": {
+            "storageAccountName": "[concat(replace(toLower(parameters('identifier')), '-', ''), 'diag6219')]",
+            "wadcfgxstartForWindows": "[concat(variables('collection').wadlogsForWindows, variables('collection').wadperfcounters1, variables('collection').wadperfcounters2, '<Metrics resourceId=\"')]",
+            "wadmetricsresourceid": "[concat(variables('resourceIdPrefix'), 'Microsoft.Compute/virtualMachines/')]",
+            "wadcfgxend": "\"><MetricAggregation scheduledTransferPeriod=\"PT1H\"/><MetricAggregation scheduledTransferPeriod=\"PT1M\"/></Metrics></DiagnosticMonitorConfiguration></WadCfg>",
+            "ladcfg": {
+                "diagnosticMonitorConfiguration": {
+                    "eventVolume": "Medium",
+                    "metrics": {
+                        "metricAggregation": [
+                            {
+                                "scheduledTransferPeriod": "PT1H"
+                            },
+                            {
+                                "scheduledTransferPeriod": "PT1M"
+                            }
+                        ],
+                        "resourceId": "__VM_RESOURCE_ID__"
+                    },
+                    "performanceCounters": {
+                        "performanceCounterConfiguration": [
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "DiskreadguestOS",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "disk",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "readbytespersecond",
+                                "counterSpecifier": "/builtin/disk/readbytespersecond",
+                                "type": "builtin",
+                                "unit": "BytesPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Diskwrites",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "disk",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "writespersecond",
+                                "counterSpecifier": "/builtin/disk/writespersecond",
+                                "type": "builtin",
+                                "unit": "CountPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Disktransfertime",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "disk",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "averagetransfertime",
+                                "counterSpecifier": "/builtin/disk/averagetransfertime",
+                                "type": "builtin",
+                                "unit": "Seconds"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Disktransfers",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "disk",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "transferspersecond",
+                                "counterSpecifier": "/builtin/disk/transferspersecond",
+                                "type": "builtin",
+                                "unit": "CountPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "DiskwriteguestOS",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "disk",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "writebytespersecond",
+                                "counterSpecifier": "/builtin/disk/writebytespersecond",
+                                "type": "builtin",
+                                "unit": "BytesPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Diskreadtime",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "disk",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "averagereadtime",
+                                "counterSpecifier": "/builtin/disk/averagereadtime",
+                                "type": "builtin",
+                                "unit": "Seconds"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Diskwritetime",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "disk",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "averagewritetime",
+                                "counterSpecifier": "/builtin/disk/averagewritetime",
+                                "type": "builtin",
+                                "unit": "Seconds"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Disktotalbytes",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "disk",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "bytespersecond",
+                                "counterSpecifier": "/builtin/disk/bytespersecond",
+                                "type": "builtin",
+                                "unit": "BytesPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Diskreads",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "disk",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "readspersecond",
+                                "counterSpecifier": "/builtin/disk/readspersecond",
+                                "type": "builtin",
+                                "unit": "CountPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Diskqueuelength",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "disk",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "averagediskqueuelength",
+                                "counterSpecifier": "/builtin/disk/averagediskqueuelength",
+                                "type": "builtin",
+                                "unit": "Count"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "NetworkinguestOS",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "network",
+                                "counter": "bytesreceived",
+                                "counterSpecifier": "/builtin/network/bytesreceived",
+                                "type": "builtin",
+                                "unit": "Bytes"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Networktotalbytes",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "network",
+                                "counter": "bytestotal",
+                                "counterSpecifier": "/builtin/network/bytestotal",
+                                "type": "builtin",
+                                "unit": "Bytes"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "NetworkoutguestOS",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "network",
+                                "counter": "bytestransmitted",
+                                "counterSpecifier": "/builtin/network/bytestransmitted",
+                                "type": "builtin",
+                                "unit": "Bytes"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Networkcollisions",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "network",
+                                "counter": "totalcollisions",
+                                "counterSpecifier": "/builtin/network/totalcollisions",
+                                "type": "builtin",
+                                "unit": "Count"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Packetsreceivederrors",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "network",
+                                "counter": "totalrxerrors",
+                                "counterSpecifier": "/builtin/network/totalrxerrors",
+                                "type": "builtin",
+                                "unit": "Count"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Packetssent",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "network",
+                                "counter": "packetstransmitted",
+                                "counterSpecifier": "/builtin/network/packetstransmitted",
+                                "type": "builtin",
+                                "unit": "Count"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Packetsreceived",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "network",
+                                "counter": "packetsreceived",
+                                "counterSpecifier": "/builtin/network/packetsreceived",
+                                "type": "builtin",
+                                "unit": "Count"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Packetssenterrors",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "network",
+                                "counter": "totaltxerrors",
+                                "counterSpecifier": "/builtin/network/totaltxerrors",
+                                "type": "builtin",
+                                "unit": "Count"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Filesystemtransfers/sec",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "filesystem",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "transferspersecond",
+                                "counterSpecifier": "/builtin/filesystem/transferspersecond",
+                                "type": "builtin",
+                                "unit": "CountPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Filesystem%freespace",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "filesystem",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "percentfreespace",
+                                "counterSpecifier": "/builtin/filesystem/percentfreespace",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Filesystem%usedspace",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "filesystem",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "percentusedspace",
+                                "counterSpecifier": "/builtin/filesystem/percentusedspace",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Filesystemusedspace",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "filesystem",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "usedspace",
+                                "counterSpecifier": "/builtin/filesystem/usedspace",
+                                "type": "builtin",
+                                "unit": "Bytes"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Filesystemreadbytes/sec",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "filesystem",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "bytesreadpersecond",
+                                "counterSpecifier": "/builtin/filesystem/bytesreadpersecond",
+                                "type": "builtin",
+                                "unit": "CountPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Filesystemfreespace",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "filesystem",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "freespace",
+                                "counterSpecifier": "/builtin/filesystem/freespace",
+                                "type": "builtin",
+                                "unit": "Bytes"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Filesystem%freeinodes",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "filesystem",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "percentfreeinodes",
+                                "counterSpecifier": "/builtin/filesystem/percentfreeinodes",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Filesystembytes/sec",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "filesystem",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "bytespersecond",
+                                "counterSpecifier": "/builtin/filesystem/bytespersecond",
+                                "type": "builtin",
+                                "unit": "BytesPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Filesystemreads/sec",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "filesystem",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "readspersecond",
+                                "counterSpecifier": "/builtin/filesystem/readspersecond",
+                                "type": "builtin",
+                                "unit": "CountPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Filesystemwritebytes/sec",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "filesystem",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "byteswrittenpersecond",
+                                "counterSpecifier": "/builtin/filesystem/byteswrittenpersecond",
+                                "type": "builtin",
+                                "unit": "CountPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Filesystemwrites/sec",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "filesystem",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "writespersecond",
+                                "counterSpecifier": "/builtin/filesystem/writespersecond",
+                                "type": "builtin",
+                                "unit": "CountPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Filesystem%usedinodes",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "filesystem",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "percentusedinodes",
+                                "counterSpecifier": "/builtin/filesystem/percentusedinodes",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "CPUIOwaittime",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "processor",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "percentiowaittime",
+                                "counterSpecifier": "/builtin/processor/percentiowaittime",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "CPUusertime",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "processor",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "percentusertime",
+                                "counterSpecifier": "/builtin/processor/percentusertime",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "CPUnicetime",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "processor",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "percentnicetime",
+                                "counterSpecifier": "/builtin/processor/percentnicetime",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "CPUpercentageguestOS",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "processor",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "percentprocessortime",
+                                "counterSpecifier": "/builtin/processor/percentprocessortime",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "CPUinterrupttime",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "processor",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "percentinterrupttime",
+                                "counterSpecifier": "/builtin/processor/percentinterrupttime",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "CPUidletime",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "processor",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "percentidletime",
+                                "counterSpecifier": "/builtin/processor/percentidletime",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "CPUprivilegedtime",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "processor",
+                                "condition": "IsAggregate=TRUE",
+                                "counter": "percentprivilegedtime",
+                                "counterSpecifier": "/builtin/processor/percentprivilegedtime",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Memoryavailable",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "memory",
+                                "counter": "availablememory",
+                                "counterSpecifier": "/builtin/memory/availablememory",
+                                "type": "builtin",
+                                "unit": "Bytes"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Swappercentused",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "memory",
+                                "counter": "percentusedswap",
+                                "counterSpecifier": "/builtin/memory/percentusedswap",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Memoryused",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "memory",
+                                "counter": "usedmemory",
+                                "counterSpecifier": "/builtin/memory/usedmemory",
+                                "type": "builtin",
+                                "unit": "Bytes"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Pagereads",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "memory",
+                                "counter": "pagesreadpersec",
+                                "counterSpecifier": "/builtin/memory/pagesreadpersec",
+                                "type": "builtin",
+                                "unit": "CountPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Swapavailable",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "memory",
+                                "counter": "availableswap",
+                                "counterSpecifier": "/builtin/memory/availableswap",
+                                "type": "builtin",
+                                "unit": "Bytes"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Swappercentavailable",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "memory",
+                                "counter": "percentavailableswap",
+                                "counterSpecifier": "/builtin/memory/percentavailableswap",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Mem.percentavailable",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "memory",
+                                "counter": "percentavailablememory",
+                                "counterSpecifier": "/builtin/memory/percentavailablememory",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Pages",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "memory",
+                                "counter": "pagespersec",
+                                "counterSpecifier": "/builtin/memory/pagespersec",
+                                "type": "builtin",
+                                "unit": "CountPerSecond"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Swapused",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "memory",
+                                "counter": "usedswap",
+                                "counterSpecifier": "/builtin/memory/usedswap",
+                                "type": "builtin",
+                                "unit": "Bytes"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Memorypercentage",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "memory",
+                                "counter": "percentusedmemory",
+                                "counterSpecifier": "/builtin/memory/percentusedmemory",
+                                "type": "builtin",
+                                "unit": "Percent"
+                            },
+                            {
+                                "annotation": [
+                                    {
+                                        "displayName": "Pagewrites",
+                                        "locale": "en-us"
+                                    }
+                                ],
+                                "class": "memory",
+                                "counter": "pageswrittenpersec",
+                                "counterSpecifier": "/builtin/memory/pageswrittenpersec",
+                                "type": "builtin",
+                                "unit": "CountPerSecond"
+                            }
+                        ]
+                    },
+                    "syslogEvents": {
+                        "syslogEventConfiguration": {
+                            "LOG_AUTH": "LOG_DEBUG",
+                            "LOG_AUTHPRIV": "LOG_DEBUG",
+                            "LOG_CRON": "LOG_DEBUG",
+                            "LOG_DAEMON": "LOG_DEBUG",
+                            "LOG_FTP": "LOG_DEBUG",
+                            "LOG_KERN": "LOG_DEBUG",
+                            "LOG_LOCAL0": "LOG_DEBUG",
+                            "LOG_LOCAL1": "LOG_DEBUG",
+                            "LOG_LOCAL2": "LOG_DEBUG",
+                            "LOG_LOCAL3": "LOG_DEBUG",
+                            "LOG_LOCAL4": "LOG_DEBUG",
+                            "LOG_LOCAL5": "LOG_DEBUG",
+                            "LOG_LOCAL6": "LOG_DEBUG",
+                            "LOG_LOCAL7": "LOG_DEBUG",
+                            "LOG_LPR": "LOG_DEBUG",
+                            "LOG_MAIL": "LOG_DEBUG",
+                            "LOG_NEWS": "LOG_DEBUG",
+                            "LOG_SYSLOG": "LOG_DEBUG",
+                            "LOG_USER": "LOG_DEBUG",
+                            "LOG_UUCP": "LOG_DEBUG"
+                        }
+                    }
+                },
+                "sampleRateInSeconds": 15
+            }
+        },
+        "vnetInfo": {
+            "vnetName": "[concat('vnet-', parameters('identifier'))]",
+            "vnetaddressSpace": "10.0.0.0/16",
+            "subnetInfo": {
+                "subnet": [
+                    {
+                        "name": "frontend",
+                        "addressPrefix": "10.0.0.0/24",
+                        "nsgRule": [
+                            {
+                                "name": "frontend-nsgrule",
+                                "protocol": "Tcp",
+                                "sourcePortRange": "*",
+                                "destinationPortRange": "",
+                                "sourceAddressPrefix": "*",
+                                "destinationAddressPrefix": "*",
+                                "access": "Allow",
+                                "priority": 300,
+                                "direction": "Inbound",
+                                "sourcePortRanges": [],
+                                "destinationPortRanges": [
+                                    "22",
+                                    "80",
+                                    "443"
+                                ],
+                                "sourceAddressPrefixes": [],
+                                "destinationAddressPrefixes": []
+                            }
+                        ]
+                    },
+                    {
+                        "name": "middle",
+                        "addressPrefix": "10.0.1.0/24",
+                        "nsgRule": [
+                            {
+                                "name": "middle-nsgrule",
+                                "protocol": "Tcp",
+                                "sourcePortRange": "*",
+                                "destinationPortRange": "22",
+                                "sourceAddressPrefix": "*",
+                                "destinationAddressPrefix": "*",
+                                "access": "Allow",
+                                "priority": 300,
+                                "direction": "Inbound",
+                                "sourcePortRanges": [],
+                                "destinationPortRanges": [],
+                                "sourceAddressPrefixes": [],
+                                "destinationAddressPrefixes": []
+                            }
+                        ]
+                    },
+                    {
+                        "name": "backend",
+                        "addressPrefix": "10.0.2.0/24",
+                        "nsgRule": [
+                            {
+                                "name": "backend-nsgrule",
+                                "protocol": "Tcp",
+                                "sourcePortRange": "*",
+                                "destinationPortRange": "22",
+                                "sourceAddressPrefix": "*",
+                                "destinationAddressPrefix": "*",
+                                "access": "Allow",
+                                "priority": 300,
+                                "direction": "Inbound",
+                                "sourcePortRanges": [],
+                                "destinationPortRanges": [],
+                                "sourceAddressPrefixes": [],
+                                "destinationAddressPrefixes": []
+                            }
+                        ]
+                    }
+                ]
+            },
+            "lbInfo": {
+                "lb": [
+                    {
+                        "name": "frontend-lb",
+                        "privateIPAddress": "10.0.0.254",
+                        "subnet": "",
+                        "sku": "Standard",
+                        "NetworkInterfaceType": "Public"
+                    },
+                    {
+                        "name": "middle-lb",
+                        "privateIPAddress": "10.0.1.254",
+                        "subnet": "middle",
+                        "sku": "Standard",
+                        "NetworkInterfaceType": "Private"
+                    }
+                ]
+            },
+            "agwInfo": {
+                "subnet": "",
+                "agw": [
+                    {
+                        "name": "",
+                        "BackendAddresses": []
+                    }
+                ]
+            }
+        },
+        "computeInfo": {
+            "avsInfo": {
+                "name": [
+                    "frontend-avs",
+                    "middle-avs",
+                    "backend-avs"
+                ]
+            },
+            "vmInfo": {
+                "vmList": [
+                    {
+                        "vmName": "3tr-l-web-vm01",
+                        "NetworkInterfaceType": "Public",
+                        "privateIPAddress": "10.0.0.4",
+                        "subnet": "frontend",
+                        "lbName": "frontend-lb",
+                        "availabilitySet": "frontend-avs",
+                        "vmSize": "Standard_DS1_v2",
+                        "imageReference": [
+                            {
+                                "publisher": "debian",
+                                "offer": "debian-10",
+                                "sku": "10",
+                                "version": "latest"
+                            }
+                        ],
+                        "osDisk": [
+                            {
+                                "osType": "Linux",
+                                "storageAccountType": "Premium_LRS",
+                                "diskSizeGB": 128
+                            }
+                        ],
+                        "dataDisks": [
+                            {
+                                "storageAccountType": "Premium_LRS",
+                                "diskSizeGB": 128
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Resources/resourceGroups",
+            "apiVersion": "2018-05-01",
+            "name": "[variables('resourceGroupName')]",
+            "location": "[parameters('location')]",
+            "properties": {}
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "name": "diagnoticsDeployment",
+            "resourceGroup": "[variables('resourceGroupName')]",
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/', variables('resourceGroupName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Storage/storageAccounts",
+                            "name": "[variables('diagnoticsInfo').storageAccountName]",
+                            "apiVersion": "2019-04-01",
+                            "location": "[parameters('location')]",
+                            "sku": {
+                                "name": "Standard_LRS"
+                            },
+                            "kind": "Storage"
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "name": "[concat('subnetNsgDeployment-', copyIndex(1))]",
+            "resourceGroup": "[variables('resourceGroupName')]",
+            "copy": {
+                "name": "nsgLoop",
+                "count": "[length(variables('vnetInfo').subnetInfo.subnet)]"
+            },
+            "dependsOn": [
+                "[resourceId('Microsoft.Resources/resourceGroups/',variables('resourceGroupName'))]"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/networkSecurityGroups",
+                            "apiVersion": "2019-04-01",
+                            "name": "[concat(variables('vnetInfo').subnetInfo.subnet[copyIndex()].name, '-nsg')]",
+                            "location": "[parameters('location')]",
+                            "properties": {
+                                "copy": [
+                                    {
+                                        "name": "securityRules",
+                                        "count": "[length(variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule)]",
+                                        "input": {
+                                            "name": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].name]",
+                                            "properties": {
+                                                "protocol": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].protocol]",
+                                                "sourcePortRange": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].sourcePortRange]",
+                                                "destinationPortRange": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].destinationPortRange]",
+                                                "sourceAddressPrefix": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].sourceAddressPrefix]",
+                                                "destinationAddressPrefix": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].destinationAddressPrefix]",
+                                                "access": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].access]",
+                                                "priority": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].priority]",
+                                                "direction": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].direction]",
+                                                "sourcePortRanges": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].sourcePortRanges]",
+                                                "destinationPortRanges": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].destinationPortRanges]",
+                                                "sourceAddressPrefixes": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].sourceAddressPrefixes]",
+                                                "destinationAddressPrefixes": "[variables('vnetInfo').subnetInfo.subnet[copyIndex()].nsgRule[copyIndex('securityRules')].destinationAddressPrefixes]"
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "name": "vNetDeployment",
+            "resourceGroup": "[variables('resourceGroupName')]",
+            "dependsOn": [
+                "nsgLoop"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Network/virtualNetworks",
+                            "apiVersion": "2019-04-01",
+                            "name": "[variables('vnetInfo').vnetName]",
+                            "location": "[parameters('location')]",
+                            "properties": {
+                                "addressSpace": {
+                                    "addressPrefixes": [
+                                        "[variables('vnetInfo').vnetaddressSpace]"
+                                    ]
+                                },
+                                "copy": [
+                                    {
+                                        "name": "subnets",
+                                        "count": "[length(variables('vnetInfo').subnetInfo.subnet)]",
+                                        "input": {
+                                            "name": "[variables('vnetInfo').subnetInfo.subnet[copyIndex('subnets')].name]",
+                                            "properties": {
+                                                "addressPrefix": "[variables('vnetInfo').subnetInfo.subnet[copyIndex('subnets')].addressPrefix]",
+                                                "networkSecurityGroup": {
+                                                    "id": "[concat(variables('resourceIdPrefix'), 'Microsoft.Network/networkSecurityGroups/', variables('vnetInfo').subnetInfo.subnet[copyIndex('subnets')].name, '-nsg')]"
+                                                }
+                                            }
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "name": "[concat('avsDeployment-', copyIndex(1))]",
+            "resourceGroup": "[variables('resourceGroupName')]",
+            "copy": {
+                "name": "avsLoop",
+                "count": "[length(variables('computeInfo').avsInfo.name)]"
+            },
+            "dependsOn": [
+                "diagnoticsDeployment"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "type": "Microsoft.Compute/availabilitySets",
+                            "name": "[variables('computeInfo').avsInfo.name[copyIndex()]]",
+                            "apiVersion": "2019-03-01",
+                            "location": "[parameters('location')]",
+                            "sku": {
+                                "name": "Aligned"
+                            },
+                            "properties": {
+                                "platformFaultDomainCount": "2",
+                                "platformUpdateDomainCount": "5"
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "name": "[concat('lbDeployment-', copyIndex(1))]",
+            "resourceGroup": "[variables('resourceGroupName')]",
+            "copy": {
+                "name": "lbLoop",
+                "count": "[length(variables('vnetInfo').lbInfo.lb)]"
+            },
+            "dependsOn": [
+                "vNetDeployment"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "condition": "[equals(variables('vnetInfo').lbInfo.lb[copyIndex()].NetworkInterfaceType, 'Public')]",
+                            "type": "Microsoft.Network/publicIPAddresses",
+                            "name": "[concat(variables('vnetInfo').lbInfo.lb[copyIndex()].name, '-ip')]",
+                            "apiVersion": "2019-04-01",
+                            "location": "[parameters('location')]",
+                            "sku": {
+                                "name": "[variables('vnetInfo').lbInfo.lb[copyIndex()].sku]",
+                                "tier": "Regional"
+                            },
+                            "properties": {
+                                "publicIPAllocationMethod": "Static"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/loadBalancers",
+                            "sku": {
+                                "name": "Standard"
+                            },
+                            "name": "[variables('vnetInfo').lbInfo.lb[copyIndex()].name]",
+                            "apiVersion": "2019-04-01",
+                            "location": "[parameters('location')]",
+                            "properties": {
+                                "frontendIPConfigurations": [
+                                    {
+                                        "name": "LoadBalancerFrontEnd",
+                                        "properties": {
+                                            "privateIPAddress": "[if(equals(variables('vnetInfo').lbInfo.lb[copyIndex()].NetworkInterfaceType, 'Private'), variables('vnetInfo').lbInfo.lb[copyIndex()].privateIPAddress, json('null'))]",
+                                            "privateIPAllocationMethod": "[if(equals(variables('vnetInfo').lbInfo.lb[copyIndex()].NetworkInterfaceType, 'Private'), 'Static', 'Dynamic')]",
+                                            "publicIPAddress": "[if(equals(variables('vnetInfo').lbInfo.lb[copyIndex()].NetworkInterfaceType, 'Public'), json(concat('{\"id\": \"', concat(variables('resourceIdPrefix'), 'Microsoft.Network/publicIpAddresses/', variables('vnetInfo').lbInfo.lb[copyIndex()].name, '-ip\"}'))) , json('null'))]",
+                                            "subnet": "[if(equals(variables('vnetInfo').lbInfo.lb[copyIndex()].NetworkInterfaceType, 'Private'), json(concat('{\"id\": \"', concat(variables('resourceIdPrefix'), 'Microsoft.Network/virtualNetworks/', variables('vnetInfo').vnetName, '/subnets/', variables('vnetInfo').lbInfo.lb[copyIndex()].subnet, '\"}'))) , json('null'))]",
+                                            "privateIPAddressVersion": "IPv4"
+                                        }
+                                    }
+                                ],
+                                "backendAddressPools": [
+                                    {
+                                        "name": "pool-1"
+                                    }
+                                ],
+                                "loadBalancingRules": [
+                                    {
+                                        "name": "rule-01",
+                                        "properties": {
+                                            "frontendIPConfiguration": {
+                                                "id": "[concat(variables('resourceIdPrefix'), 'Microsoft.Network/loadBalancers/', variables('vnetInfo').lbInfo.lb[copyIndex()].name, '/frontendIPConfigurations/LoadBalancerFrontend')]"
+                                            },
+                                            "frontendPort": 8888,
+                                            "backendPort": 8888,
+                                            "enableFloatingIP": false,
+                                            "idleTimeoutInMinutes": 4,
+                                            "protocol": "Tcp",
+                                            "loadDistribution": "Default",
+                                            "backendAddressPool": {
+                                                "id": "[concat(variables('resourceIdPrefix'), 'Microsoft.Network/loadBalancers/', variables('vnetInfo').lbInfo.lb[copyIndex()].name, '/backendAddressPools/pool-1')]"
+                                            },
+                                            "probe": {
+                                                "id": "[concat(variables('resourceIdPrefix'), 'Microsoft.Network/loadBalancers/', variables('vnetInfo').lbInfo.lb[copyIndex()].name, '/probes/probe-1')]"
+                                            }
+                                        }
+                                    }
+                                ],
+                                "probes": [
+                                    {
+                                        "name": "probe-1",
+                                        "properties": {
+                                            "protocol": "Tcp",
+                                            "port": 8888,
+                                            "intervalInSeconds": 5,
+                                            "numberOfProbes": 2
+                                        }
+                                    }
+                                ]
+                            }
+                        }
+                    ]
+                }
+            }
+        },
+        {
+            "type": "Microsoft.Resources/deployments",
+            "apiVersion": "2019-05-01",
+            "name": "[concat(variables('computeInfo').vmInfo.vmList[copyIndex()].vmName, '-Deployment')]",
+            "resourceGroup": "[variables('resourceGroupName')]",
+            "copy": {
+                "name": "vmLoop",
+                "count": "[length(variables('computeInfo').vmInfo.vmList)]"
+            },
+            "dependsOn": [
+                "lbLoop",
+                "avsLoop",
+                "Microsoft.Resources/deployments/diagnoticsDeployment"
+            ],
+            "properties": {
+                "mode": "Incremental",
+                "template": {
+                    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                    "contentVersion": "1.0.0.0",
+                    "parameters": {},
+                    "variables": {},
+                    "resources": [
+                        {
+                            "condition": "[equals(variables('computeInfo').vmInfo.vmList[copyIndex()].NetworkInterfaceType, 'Public')]",
+                            "type": "Microsoft.Network/publicIPAddresses",
+                            "name": "[concat(variables('computeInfo').vmInfo.vmList[copyIndex()].vmName, '-ip')]",
+                            "apiVersion": "2019-04-01",
+                            "location": "[parameters('location')]",
+                            "sku": {
+                                "name": "Standard",
+                                "tier": "Regional"
+                            },
+                            "properties": {
+                                "publicIPAllocationMethod": "Static"
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Network/networkInterfaces",
+                            "name": "[concat(variables('computeInfo').vmInfo.vmList[copyIndex()].vmName, '-nic')]",
+                            "apiVersion": "2019-04-01",
+                            "location": "[parameters('location')]",
+                            "dependsOn": [
+                                "[concat(variables('computeInfo').vmInfo.vmList[copyIndex()].vmName, '-ip')]"
+                            ],
+                            "properties": {
+                                "ipConfigurations": [
+                                    {
+                                        "name": "ipconfig1",
+                                        "properties": {
+                                            "privateIPAllocationMethod": "Static",
+                                            "privateIPAddress": "[variables('computeInfo').vmInfo.vmList[copyIndex()].privateIPAddress]",
+                                            "publicIpAddress": "[if(equals(variables('computeInfo').vmInfo.vmList[copyIndex()].NetworkInterfaceType, 'Public'), json(concat('{\"id\": \"', concat(variables('resourceIdPrefix'), 'Microsoft.Network/publicIpAddresses/', variables('computeInfo').vmInfo.vmList[copyIndex()].vmName, '-ip\"}'))) , json('null'))]",
+                                            "subnet": {
+                                                "id": "[concat(variables('resourceIdPrefix'), 'Microsoft.Network/virtualNetworks/', variables('vnetInfo').vnetName, '/subnets/', variables('computeInfo').vmInfo.vmList[copyIndex()].subnet)]"
+                                            },
+                                            "copy": [
+                                                {
+                                                    "name": "loadBalancerBackendAddressPools",
+                                                    "count": "[if(greater(length(variables('computeInfo').vmInfo.vmList[copyIndex()].lbName), 0), 1, 0)]",
+                                                    "input": {
+                                                        "id": "[concat(variables('resourceIdPrefix'), 'Microsoft.Network/loadBalancers/', variables('computeInfo').vmInfo.vmList[copyIndex()].lbName, '/backendAddressPools/pool-1')]"
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    }
+                                ],
+                                "enableAcceleratedNetworking": false
+                            }
+                        },
+                        {
+                            "type": "Microsoft.Compute/virtualMachines",
+                            "name": "[variables('computeInfo').vmInfo.vmList[copyIndex()].vmName]",
+                            "apiVersion": "2019-03-01",
+                            "location": "[parameters('location')]",
+                            "dependsOn": [
+                                "[concat(variables('computeInfo').vmInfo.vmList[copyIndex()].vmName, '-nic')]"
+                            ],
+                            "properties": {
+                                "availabilitySet": "[if(greater(length(variables('computeInfo').vmInfo.vmList[copyIndex()].availabilitySet), 0), json(concat('{\"id\": \"', concat(variables('resourceIdPrefix'), 'Microsoft.Compute/availabilitySets/', variables('computeInfo').vmInfo.vmList[copyIndex()].availabilitySet, '\"}'))) , json('null'))]",
+                                "hardwareProfile": {
+                                    "vmSize": "[variables('computeInfo').vmInfo.vmList[copyIndex()].vmSize]"
+                                },
+                                "osProfile": {
+                                    "computerName": "[variables('computeInfo').vmInfo.vmList[copyIndex()].vmName]",
+                                    "adminUsername": "[parameters('adminUsername')]",
+                                    "adminPassword": "[parameters('adminPassword')]"
+                                },
+                                "storageProfile": {
+                                    "imageReference": {
+                                        "publisher": "[variables('computeInfo').vmInfo.vmList[copyIndex()].imageReference[0].publisher]",
+                                        "offer": "[variables('computeInfo').vmInfo.vmList[copyIndex()].imageReference[0].offer]",
+                                        "sku": "[variables('computeInfo').vmInfo.vmList[copyIndex()].imageReference[0].sku]",
+                                        "version": "[variables('computeInfo').vmInfo.vmList[copyIndex()].imageReference[0].version]"
+                                    },
+                                    "osDisk": {
+                                        "osType": "[variables('computeInfo').vmInfo.vmList[copyIndex()].osDisk[0].osType]",
+                                        "name": "[concat(variables('computeInfo').vmInfo.vmList[copyIndex()].vmName, '-osdisk')]",
+                                        "createOption": "FromImage",
+                                        "caching": "ReadWrite",
+                                        "managedDisk": {
+                                            "storageAccountType": "[variables('computeInfo').vmInfo.vmList[copyIndex()].osDisk[0].storageAccountType]"
+                                        },
+                                        "diskSizeGB": "[variables('computeInfo').vmInfo.vmList[copyIndex()].osDisk[0].diskSizeGB]"
+                                    },
+                                    "copy": [
+                                        {
+                                            "name": "dataDisks",
+                                            "count": "[length(variables('computeInfo').vmInfo.vmList[copyIndex()].dataDisks)]",
+                                            "input": {
+                                                "name": "[concat(variables('computeInfo').vmInfo.vmList[copyIndex()].vmName, '-datadisk', padLeft(copyIndex('dataDisks', 1),2,'0'))]",
+                                                "diskSizeGB": "[variables('computeInfo').vmInfo.vmList[copyIndex()].dataDisks[copyIndex('dataDisks')].diskSizeGB]",
+                                                "lun": "[copyIndex('dataDisks')]",
+                                                "createOption": "Empty",
+                                                "caching": "ReadOnly",
+                                                "managedDisk": {
+                                                    "storageAccountType": "[variables('computeInfo').vmInfo.vmList[copyIndex()].dataDisks[copyIndex('dataDisks')].storageAccountType]"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                },
+                                "networkProfile": {
+                                    "networkInterfaces": [
+                                        {
+                                            "properties": {
+                                                "primary": true
+                                            },
+                                            "id": "[concat(variables('resourceIdPrefix'), 'Microsoft.Network/networkInterfaces/', variables('computeInfo').vmInfo.vmList[copyIndex()].vmName, '-nic')]"
+                                        }
+                                    ]
+                                },
+                                "diagnosticsProfile": {
+                                    "bootDiagnostics": {
+                                        "enabled": true,
+                                        "storageUri": "[concat('https://', variables('diagnoticsInfo').storageAccountName, '.blob.core.windows.net/')]"
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "condition": "[equals(variables('computeInfo').vmInfo.vmList[copyIndex()].osDisk[0].osType, 'Windows')]",
+                            "type": "Microsoft.Compute/virtualMachines/extensions",
+                            "apiVersion": "2019-03-01",
+                            "name": "[concat(variables('computeInfo').vmInfo.vmList[copyIndex()].vmName, '/Microsoft.Insights.VMDiagnosticsSettings')]",
+                            "location": "[parameters('location')]",
+                            "dependsOn": [
+                                "[variables('computeInfo').vmInfo.vmList[copyIndex()].vmName]"
+                            ],
+                            "properties": {
+                                "autoUpgradeMinorVersion": true,
+                                "publisher": "Microsoft.Azure.Diagnostics",
+                                "type": "IaaSDiagnostics",
+                                "typeHandlerVersion": "1.5",
+                                "settings": {
+                                    "StorageAccount": "[variables('diagnoticsInfo').storageAccountName]",
+                                    "xmlCfg": "[base64(concat(variables('diagnoticsInfo').wadcfgxstartForWindows, variables('diagnoticsInfo').wadmetricsresourceid, variables('computeInfo').vmInfo.vmList[copyIndex()].vmName, variables('diagnoticsInfo').wadcfgxend))]"
+                                },
+                                "protectedSettings": {
+                                    "storageAccountName": "[variables('diagnoticsInfo').storageAccountName]",
+                                    "storageAccountEndPoint": "https://core.windows.net"
+                                }
+                            }
+                        },
+                        {
+                            "condition": "[equals(variables('computeInfo').vmInfo.vmList[copyIndex()].osDisk[0].osType, 'Linux')]",
+                            "type": "Microsoft.Compute/virtualMachines/extensions",
+                            "name": "[concat(variables('computeInfo').vmInfo.vmList[copyIndex()].vmName,'/LinuxDiagnostic')]",
+                            "apiVersion": "2019-03-01",
+                            "location": "[parameters('location')]",
+                            "dependsOn": [
+                                "[variables('computeInfo').vmInfo.vmList[copyIndex()].vmName]"
+                            ],
+                            "properties": {
+                                "publisher": "Microsoft.Azure.Diagnostics",
+                                "type": "LinuxDiagnostic",
+                                "typeHandlerVersion": "3.0",
+                                "autoUpgradeMinorVersion": true,
+                                "settings": {
+                                    "StorageAccount": "[variables('diagnoticsInfo').storageAccountName]",
+                                    "ladCfg": "[variables('diagnoticsInfo').ladcfg]"
+                                },
+                                "protectedSettings": {
+                                    "storageAccountName": "[variables('diagnoticsInfo').storageAccountName]",
+                                    "storageAccountEndPoint": "https://core.windows.net"
+                                }
+                            }
+                        }
+                    ]
+                }
+            }
+        }
+    ]
+}

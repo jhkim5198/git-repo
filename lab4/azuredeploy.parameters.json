@@ -1,0 +1,23 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "adminUsername": {
+            "value": "labAdmin"
+        },
+        "adminPassword": {
+            "reference": {
+                "keyVault": {
+                    "id" : "/subscriptions/4370ab6e-5598-466b-b64b-252509825a4e/resourceGroups/keyVaultRG/providers/Microsoft.KeyVault/vaults/jhkim4198keyValut"
+                },
+                "secretName" : "jhkimamho"
+            }
+        },
+        "vnetName": {
+            "value": "ubuntuVnet"
+        },
+        "subnetName": {
+            "value": "ubuntuSubnet"
+        }
+    }
+}

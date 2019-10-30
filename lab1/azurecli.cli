@@ -1,0 +1,25 @@
+rg=$(az group create --name ARMLab6 --location koreacentral --query name --out tsv)
+template=/mnt/c/ARMLAB/lab6/t-shirt.json
+job=job.$(date --utc +"%Y%m%d.%H%M")
+param=/mnt/c/ARMLAB/lab5/azuredeploy.parameters.json
+az group deployment create --template-file $template --name $job --resource-group $rg --query properties.outputs --output jsonc
+az group deployment create --template-file $template --parameters "@$param" --parameters vmName=1=pipVM1 --name $job --resource-group $rg --output tsv
+
+az group deployment list --resource-group ARMLab3 -o table
+az group deployment show --resource-group ARMLab3 --name job.. -o jsonc --query properties.outputs.vmRef.value
+
+
+val
+hastName=$(jq -r .sshCommand.value <<< $outputs)
+echo $hostName
+
+az group deployment create --template-file $template --name $job --resource-group $rg --output tsv
+
+$storageAccount
+#az group deployment create --name $job --parameters $param --template-file $template --resource-group $rg
+
+
+#az group deployment validate --template-file $template -g $rg
+
+
+az group deployment create --query properties.outputs --template-file $template --parameters "@$param" --name $job --resource-group $rg --output tsv

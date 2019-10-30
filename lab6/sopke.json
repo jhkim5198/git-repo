@@ -1,0 +1,62 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+
+        "peer": {
+            "type": "bool",
+            "defaultValue": "true",
+            "metadata": {
+                "description": "description"
+            }
+        },
+        "hub": {
+            "type": "object",
+            "defaultValue": {
+                "resourceGroup": "koreacentral",
+                "vnet": {
+                    "name": "hub"
+                }
+            },
+            "metadata": {
+                "description": "description"
+            }
+        },
+
+        "spoke": {
+            "type": "object",
+            "defaultValue": {
+                "vnet": {
+                    "name": "example-vnet",
+                    "addressPrefixes": [
+                        "10.1.0.0/16"
+
+                    ]
+                },
+                "subnet": [
+                    {
+                        "name": "example-vnet-subnet1",
+                        "addressPrefixes": "10.1.1.0/24"
+                    },
+                    {
+                        "name": "subnet1",
+                        "addressPrefixies": "10.1.2.0/24"
+                    }
+                ]
+            },
+            "metadata": {
+                "description": "description"
+            }
+        }
+
+    },
+    "variables": {
+    },
+    "resources": [
+        
+    ],
+    "outputs": {
+    },
+    "functions": [
+    ]
+}

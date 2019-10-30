@@ -1,0 +1,61 @@
+{
+    "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "webAppName": {
+            "type": "string"
+        }
+    },
+    "variables" :{
+        "webAppPlan": "[concat(parameters('webAppName'), '-plan')]",
+        "webAppPlanId" : "[resourceId('Microsoft.WEb.serverFarms', variables('webAppPlan'))]"
+    },
+
+    "resources": [
+        {
+            "apiVersion": "2018-11-01",
+            "name": "[parameters('webAppName')]",
+            "type": "Microsoft.Web/sites",
+            "location": "Korea Central",
+            "dependsOn": [
+                "[variables('webAppPlanId')]"
+            ],
+            "properties": {
+                "name": "[parameters('webAppName')]",
+                "siteConfig": {
+                    "appSettings": [
+                    ],
+                    "metadata": [
+                        {
+                            "name": "CURRENT_STACK",
+                            "value": "dotnet"
+                        }
+                    ],
+                    "netFrameworkVersion": "v4.0",
+                    "alwaysOn": "true"
+                },
+                "serverFarmId": "[concat(variables('webAppPlanId'))]",
+                "hostingEnvironment": "",
+                "clientAffinityEnabled": true
+            }
+        },
+        {
+            "apiVersion": "2018-11-01",
+            "name": "[variables('webAppPlan')]",
+            "type": "Microsoft.Web/serverfarms",
+            "kind": "",
+            "dependsOn": [
+            ],
+            "properties": {
+                "name": "[variables('webAppPlan')]",
+                "workerSize": "0",
+                "workerSizeId": "0",
+                "numberOfWorkers": "1"
+            },
+            "sku": {
+                "Tier": "Standard",
+                "Name": "S1"
+            }
+        }
+    ]
+}

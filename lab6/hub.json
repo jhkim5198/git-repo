@@ -1,0 +1,61 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+
+        "spoke": {
+            "type": "object",
+            "defaultValue": {
+                "vnet": {
+                    "name": "spoke",
+                    "addressPrefixies": [
+                        "10.99.0.0/16"
+                    ]
+                },
+                "subnets": [
+                    {
+                        "name": "subnet1",
+                        "addressPrefixies": "10.99.0.0/24"
+                    },
+                    {
+                        "name": "subnet2",
+                        "addressPrefixies": "10.99.1.0/24"
+                    }
+                ]
+            }
+        }
+
+    },
+    "variables": {
+    },
+    "resources": [
+        {
+            "name": "[parameters('spoke').vnet.name]",
+            "type": "Microsoft.Network/virtualNetworks",
+            "apiVersion": "2018-08-01",
+            "location": "[resourceGroup().location]",
+            "properties": {
+                "addressSpace": {
+                    "addressPrefixes": "[parameters('spoke').vnet.addressPrefixies]"
+                },
+
+                "copy": [
+                    {
+                        "name": "subnets",
+                        "count": "[length(parameters('spoke').subnets)]",
+                        "input": {
+                            "name": "[parameters('spoke').subnets[copyIndex('subnets')].name]",
+                            "properties": {
+                                "addressPrefix": "[parameters('spoke').subnets[copyIndex('subnets')].addressPrefix]"
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ],
+    "outputs": {
+    },
+    "functions": [
+    ]
+}
